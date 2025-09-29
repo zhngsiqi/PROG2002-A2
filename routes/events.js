@@ -71,4 +71,33 @@ router.get('/search', (req, res) => {
     });
 });
 
+
+router.get('/:id', (req, res) => {
+  const sql = `
+    SELECT e.*, c.name AS category, o.name AS organisation, o.description AS org_description
+    FROM events e
+    JOIN categories c ON e.category_id = c.category_id
+    JOIN organisations o ON e.organisation_id = o.organisation_id
+    WHERE e.event_id = ?
+  `;
+
+  conn.promise().query(sql, [req.params.id])
+    .then(([rows]) => {
+      // we should return not found message if query event by id is empty
+      if (rows.length === 0) {
+        return res.status(404).json({
+          error: 'Event not found'
+        });
+      }
+      res.json(rows[0]); // return json to frontend
+    })
+    .catch(err => {
+      // console and handle error
+      console.log(err.message)
+      res.status(500).json({
+        error: "Server error"
+      })
+    });
+});
+
 module.exports = router;
